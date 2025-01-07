@@ -28,7 +28,7 @@ const UserController=({
     login:async(req,res)=>{
         try {
             const {email,password} = req.body;
-            if(!(email,password)){
+            if(!email || !password){
                 return res.status(400).json({message:"All inputs is required"});
             }
             const user = await User.findOne({email});
@@ -51,6 +51,14 @@ const UserController=({
             res.status(500).json({message:error.message});
         }
 
+    },
+    getAllUsers:async(req,res)=>{
+        try {
+            const users = await User.find();
+            res.status(200).json(users);
+        } catch (error) {
+            res.status(500).json({message:error.message});
+        }
     }
 });
 
