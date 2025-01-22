@@ -71,7 +71,107 @@ const UserController=({
         } catch (error) {
             res.status(500).json({message:error.message});          
         }
+    },
+    
+    
+   
+
+    addAddress: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { addressLine, city, country, email, phoneNumber, isDefault } = req.body;
+
+            const user = await User.findById(id);
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+
+            if (isDefault) {
+                user.addresses.forEach(address => {
+                    address.isDefault = false;
+                });
+            }
+
+            user.addresses.push({ addressLine, city, country, email, phoneNumber, isDefault });
+
+            const updatedUser = await user.save();
+            res.status(200).json({ message: "Address added successfully", updatedUser });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    viewAddresses: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const user = await User.findById(id).select("addresses");
+
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+
+            res.status(200).json({ addresses: user.addresses });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    updateAddress: async (req, res) => {
+        try {
+            const { id, addressId } = req.params;
+            const { addressLine, city, country, email, phoneNumber, isDefault } = req.body;
+
+            const user = await User.findById(id);
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+
+            const address = user.addresses.id(addressId);
+            if (!address) {
+                return res.status(400).json({ message: "Address not found" });
+            }
+
+            address.addressLine = addressLine || address.addressLine;
+            address.city = city || address.city;
+            address.country = country || address.country;
+            address.email = email || address.email;
+            address.phoneNumber = phoneNumber || address.phoneNumber;
+            address.isDefault = isDefault || address.isDefault;
+
+            if (isDefault) {
+                user.addresses.forEach(addr => {
+                    if (addr !== address) addr.isDefault = false;
+                });
+            }
+
+            const updatedUser = await user.save();
+            res.status(200).json({ message: "Address updated successfully", updatedUser });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    deleteAddress: async (req, res) => {
+        try {
+            const { id, addressId } = req.params;
+            const user = await User.findById(id);
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+
+            const address = user.addresses.id(addressId);
+            if (!address) {
+                return res.status(400).json({ message: "Address not found" });
+            }
+
+            address.remove();
+            const updatedUser = await user.save();
+            res.status(200).json({ message: "Address deleted successfully", updatedUser });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
     }
+    
 });
 
 module.exports = UserController;
